@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from rest_framework import generics, permissions
+from django.shortcuts import render, redirect
+from rest_framework import generics, permissions, status
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 from .serializers import ChocoSerializer
@@ -21,7 +21,7 @@ class ListChocolate(generics.ListCreateAPIView):
 
 
 class DetailChoco(generics.RetrieveUpdateDestroyAPIView):
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     renderer_classes = [TemplateHTMLRenderer]
     template_name = 'detail.html'
     queryset = Chocolate.objects.all()
@@ -29,7 +29,13 @@ class DetailChoco(generics.RetrieveUpdateDestroyAPIView):
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_object()
-        return Response({'object': queryset})
+        if queryset is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        authenticated = request.user.is_authenticated
+        print('######', authenticated)
+        if not authenticated:
+            return redirect('list')
+        return Response({'object': queryset, 'authentication': authenticated})
 
 
 class ChocoCheckoutView(generics.ListAPIView):
@@ -41,7 +47,13 @@ class ChocoCheckoutView(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_object()
-        return Response({'object': queryset})
+        if queryset is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        authenticated = request.user.is_authenticated
+        print('######', authenticated)
+        if not authenticated:
+            return redirect('list')
+        return Response({'object': queryset, 'authentication': authenticated})
 
 
 def home(request):
